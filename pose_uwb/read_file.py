@@ -11,15 +11,15 @@ def read_anchor(path):
 
     # Import position of ancors
     anchor1 = Point()
-    anchor1.x = scenario['uwb_bases']["base_0"]["position"][0]
-    anchor1.y = scenario['uwb_bases']["base_0"]["position"][1]
-    anchor1.z = scenario['uwb_bases']["base_0"]["position"][2]
+    anchor1.x = scenario['uwb_bases']["anchor_0"]["position"][0]
+    anchor1.y = scenario['uwb_bases']["anchor_0"]["position"][1]
+    anchor1.z = scenario['uwb_bases']["anchor_0"]["position"][2]
 
 
     anchor2 = Point()
-    anchor2.x = scenario['uwb_bases']["base_1"]["position"][0]
-    anchor2.y = scenario['uwb_bases']["base_1"]["position"][1]
-    anchor2.z = scenario['uwb_bases']["base_1"]["position"][2]
+    anchor2.x = scenario['uwb_bases']["anchor_1"]["position"][0]
+    anchor2.y = scenario['uwb_bases']["anchor_1"]["position"][1]
+    anchor2.z = scenario['uwb_bases']["anchor_1"]["position"][2]
 
     return anchor1, anchor2
 
