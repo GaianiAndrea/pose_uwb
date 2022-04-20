@@ -1,0 +1,33 @@
+leds:
+    led_0:
+        position: [3.572, -2.946, 2.080]
+
+    led_1:
+        position: [1.699, -2.609, 0.850]
+
+    led_2:
+        position: [3.239, -0.606, 0.150]
+
+    led_3:
+        position: [0.762, -1.031, 0.150]
+
+strips:
+    0:
+        line: [[4.850, -1.455, 0.900], [4.850, 3.545, 0.900]]
+        length: 5.000
+        direction: -1
+        pixels: 150
+
+    1:
+        line: [[4.790, 3.595, 0.900], [-0.210, 3.595, 0.900]]
+        length: 5.000
+        direction: 1
+        pixels: 149
+
+uwb_bases:
+    anchor_0:
+        position: [4.845, -1.498, 0.918]
+
+    anchor_1:
+        position: [4.845, 3.570, 0.918]
+

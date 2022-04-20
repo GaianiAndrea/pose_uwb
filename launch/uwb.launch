@@ -1,0 +1,51 @@
+<launch>
+  <!-- Params for launch file -->
+  <arg name="ray_topic_name" default="pointing_ray_uwb"/>
+  <arg name="map_path" default="$(find-pkg-share pose_uwb)/map/lab.yaml"/>
+  <arg name="do_relloc" default="False"/>
+  <arg name="user_kinematics" default="bill"/>
+  <arg name="sim_imu" default="True"/>
+  <arg name="user_name" default="user1"/>
+  <arg name="pointer_cmap" default="viridis_r"/>
+
+  <!-- Params for wrist position node -->
+  <arg name="wrist_approx_topic" default="wrist_approx"/>
+  <arg name="ranges_topic" default="ranges"/>
+  <arg name="imu_topic" default="imu"/>
+
+  <!-- Params for pointing node -->
+  <arg name="pointing_ray_topic" default="pointing_ray_uwb"/>
+
+
+  <include file="$(find-pkg-share relloc)/launch/docker_hri.launch">
+    <arg name="map_path" value="$(var map_path)" />
+    <arg name="do_relloc" value="$(var do_relloc)"/>
+    <arg name="user_kinematics" value="$(var user_kinematics)"/>
+    <arg name="sim_imu" value="$(var sim_imu)"/>
+    <arg name="user_name" value="$(var user_name)"/>
+    <arg name="pointer_cmap" value="$(var pointer_cmap)"/>
+    <arg name="ray_topic_name" value="$(var ray_topic_name)"/>
+  </include>
+
+  <group>
+    <push-ros-namespace namespace="$(var user_name)"/>
+    <node name="wrist_position_uwb" pkg="pose_uwb" exec="wrist_pose_uwb_node.py">
+      <param name="map_path" value="$(var map_path)" />
+      <param name="wrist_apporx_topic" value="$(var wrist_approx_topic)" />
+      <param name="ranges_topic" value="$(var ranges_topic)" />
+      <param name="imu_topic" value="$(var imu_topic)" />
+      <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
+    </node>
+  </group>
+
+  <group>
+    <push-ros-namespace namespace="$(var user_name)"/>
+    <node name="pointing_node_uwb" pkg="pose_uwb" exec="ray_uwb.py">
+      <param name="pointing_ray_topic" value="$(var pointing_ray_topic)" />
+      <param name="wrist_apporx_topic" value="$(var wrist_approx_topic)" />
+      <param name="imu_topic" value="$(var imu_topic)" />
+      <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
+    </node>
+  </group>
+
+</launch>
