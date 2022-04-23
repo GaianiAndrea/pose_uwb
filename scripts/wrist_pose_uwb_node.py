@@ -18,6 +18,8 @@ class IMUSub(Node):
     
     wrist = PointStamped()
     current_imu = Quaternion()
+    old_range_anchor1 = 0.0
+    old_range_anchor2 = 0.0
 
 
     def __init__(self):
@@ -79,8 +81,16 @@ class IMUSub(Node):
         range_anchor1 = msg.range[0]
         range_anchor2 = msg.range[1]
 
+        if range_anchor1 == 0.0:
+            range_anchor1 = self.old_range_anchor1
+        if range_anchor2 == 0.0:
+            range_anchor2 = self.old_range_anchor2
+
         self.wrist.header.stamp = msg.header.stamp
         self.wrist.header.frame_id = 'world'
+
+        self.old_range_anchor1 = range_anchor1
+        self.old_range_anchor2 = range_anchor2
 
         self.compute_coord(range_anchor1, range_anchor2)
 

@@ -3,6 +3,9 @@ from geometry_msgs.msg import Point, Quaternion
 import numpy as np
 import math
 import PyKDL
+import warnings
+
+warnings.filterwarnings('error')
 
 
 def wrist_z_position(imu_coordinate: Quaternion, Bill):
@@ -18,13 +21,29 @@ def wrist_z_position(imu_coordinate: Quaternion, Bill):
 
 def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, z: float):
     p = Point()
-    p.z = z
+    p.z = float(z)
 
     # Compute the radius of the circle at height of z
     delta_1 = np.abs(p.z - pos_1.z)
-    r_1 = np.sqrt(dist_1**2 - delta_1**2)
+    try:
+        r_1 = np.sqrt(dist_1**2 - delta_1**2)
+    except Warning:
+        print('WARNING: Range 1 = ', dist_1, ' Delta 1 = ', delta_1, ' SQRT problem = ', dist_1**2 - delta_1**2)
+        if dist_1 == 0.0:
+            r_1 = 5.0
+        else:
+            r_1 = dist_1
+
     delta_2 = np.abs(p.z - pos_2.z)
-    r_2 = np.sqrt(dist_2**2 - delta_2**2)
+    try:
+        r_2 = np.sqrt(dist_2**2 - delta_2**2)
+    except Warning:
+        print('WARNING: Range 2 = ', dist_2, ' Delta 2 = ', delta_2, ' SQRT problem = ', dist_2**2 - delta_2**2)
+        if dist_2 == 0.0:
+            r_2 = 5.0
+        else:
+            r_2 = dist_2
+
 
     # Define variable to make easier the computation of x and y
     a_1 = -2 * pos_1.x
@@ -40,7 +59,7 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
     # then compute the two possible x-coordinate and by scalar product decided between the two
     if a_1 == a_2:
         y = (c_2 - c_1) / (b_1 - b_2)
-        p.y = y
+        p.y = float(y)
         d_1 = y**2 + b_1 * y + c_1
         d_2 = y**2 + b_2 * y + c_2
 
@@ -55,15 +74,15 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
             x1 - pos_1.x
         )
         if checker > 0:
-            p.x = x1
+            p.x = float(x1)
         else:
-            p.x = x2
+            p.x = float(x2)
 
         # If the two ancors have the same y-coordinate then compute first x-coordinate
         # then compute the two possible y-coordinate and by scalar product decided between the two
     elif b_1 == b_2:
         x = (c_2 - c_1) / (a_1 - a_2)
-        p.x = x
+        p.x = float(x)
         d_1 = x**2 + a_1 * x + c_1
         d_2 = x**2 + a_2 * x + c_2
 
@@ -78,9 +97,9 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
             p.x - pos_1.x
         )
         if checker > 0:
-            p.y = y1
+            p.y = float(y1)
         else:
-            p.y = y2
+            p.y = float(y2)
 
     else:
         A = a_1 - a_2
@@ -100,11 +119,11 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
         x2 = compute_x(y2, p.z, a_1, d_2, pos_1, pos_2, dist_1, dist_2)
 
         if np.isnan(x1) and not np.isnan(x2):
-            p.y = y2
-            p.x = x2
+            p.y = float(y2)
+            p.x = float(x2)
         elif not np.isnan(x1) and np.isnan(x2):
-            p.y = y1
-            p.x = x1
+            p.y = float(y1)
+            p.x = float(x1)
         else:
             print("SOMETHING GONE WRONG - NO INTERSECTION")
 
