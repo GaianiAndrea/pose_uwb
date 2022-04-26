@@ -25,24 +25,10 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
 
     # Compute the radius of the circle at height of z
     delta_1 = np.abs(p.z - pos_1.z)
-    try:
-        r_1 = np.sqrt(dist_1**2 - delta_1**2)
-    except Warning:
-        print('WARNING: Range 1 = ', dist_1, ' Delta 1 = ', delta_1, ' SQRT problem = ', dist_1**2 - delta_1**2)
-        if dist_1 == 0.0:
-            r_1 = 5.0
-        else:
-            r_1 = dist_1
+    r_1 = np.sqrt(dist_1**2 - delta_1**2)
 
     delta_2 = np.abs(p.z - pos_2.z)
-    try:
-        r_2 = np.sqrt(dist_2**2 - delta_2**2)
-    except Warning:
-        print('WARNING: Range 2 = ', dist_2, ' Delta 2 = ', delta_2, ' SQRT problem = ', dist_2**2 - delta_2**2)
-        if dist_2 == 0.0:
-            r_2 = 5.0
-        else:
-            r_2 = dist_2
+    r_2 = np.sqrt(dist_2**2 - delta_2**2)
 
 
     # Define variable to make easier the computation of x and y
@@ -70,9 +56,7 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
 
         # assert math.isclose(x1, x1_) and math.isclose(x2, x2_)
 
-        checker = (pos_2.x - pos_1.x) * (p.y - pos_1.y) - (pos_2.y - pos_1.y) * (
-            x1 - pos_1.x
-        )
+        checker = (pos_2.x - pos_1.x) * (p.y - pos_1.y) - (pos_2.y - pos_1.y) * (x1 - pos_1.x)
         if checker > 0:
             p.x = float(x1)
         else:
@@ -93,9 +77,7 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
 
         # assert math.isclose(y1, y1_) and math.isclose(y2, y2_)
 
-        checker = (pos_2.x - pos_1.x) * (y1 - pos_1.y) - (pos_2.y - pos_1.y) * (
-            p.x - pos_1.x
-        )
+        checker = (pos_2.x - pos_1.x) * (y1 - pos_1.y) - (pos_2.y - pos_1.y) * (p.x - pos_1.x)
         if checker > 0:
             p.y = float(y1)
         else:
@@ -147,12 +129,8 @@ def wrist_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, imu
 
 def compute_x(y: float, z:float, a:float, d:float, pos_1:Point, pos_2:Point, dist_1:float, dist_2:float):
     x1, x2 = np.roots([1, a, d])
-    checker_x1 = (pos_2.x - pos_1.x) * (y - pos_1.y) - (pos_2.y - pos_1.y) * (
-        x1 - pos_1.x
-    )
-    checker_x2 = (pos_2.x - pos_1.x) * (y - pos_1.y) - (pos_2.y - pos_1.y) * (
-        x2 - pos_1.x
-    )
+    checker_x1 = (pos_2.x - pos_1.x) * (y - pos_1.y) - (pos_2.y - pos_1.y) * (x1 - pos_1.x)
+    checker_x2 = (pos_2.x - pos_1.x) * (y - pos_1.y) - (pos_2.y - pos_1.y) * (x2 - pos_1.x)
 
     dist_x1_pos1 = dist(pos_1, x1, y, z)
     dist_x1_pos2 = dist(pos_2, x1, y, z)

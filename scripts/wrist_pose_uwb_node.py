@@ -48,7 +48,7 @@ class IMUSub(Node):
         self.publisher_ = self.create_publisher(
             PointStamped, 
             wrist_approx_topic,
-            100)
+            qos)
 
         ranges_topic = self.declare_parameter(
             "ranges_topic", "ranges"
@@ -72,33 +72,22 @@ class IMUSub(Node):
             qos)
         self.subscription  # prevent unused variable warning
 
-        
-
-
-
-
     def listener_ranges(self, msg):
         range_anchor1 = msg.range[0]
         range_anchor2 = msg.range[1]
-
-        if range_anchor1 == 0.0:
-            range_anchor1 = self.old_range_anchor1
-        if range_anchor2 == 0.0:
-            range_anchor2 = self.old_range_anchor2
 
         self.wrist.header.stamp = msg.header.stamp
         self.wrist.header.frame_id = 'world'
 
         self.old_range_anchor1 = range_anchor1
         self.old_range_anchor2 = range_anchor2
-
-        self.compute_coord(range_anchor1, range_anchor2)
+        
+        if range_anchor1 >= 0.2 and range_anchor1 <= 15.0 and range_anchor2 >= 0.2 and range_anchor2 <= 15.0:
+            self.compute_coord(range_anchor1, range_anchor2)
 
         
     def listener_imu(self, msg):
-        self.current_imu = msg.quaternion
-
-        
+        self.current_imu = msg.quaternion   
 
     def compute_coord(self, range_anchor1, range_anchor2):
         

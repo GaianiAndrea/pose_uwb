@@ -51,6 +51,12 @@ class RayUWB(Node):
     
     def __init__(self):
         super().__init__('pointing_ray_uwb')
+        
+        qos = rclpy.qos.QoSProfile(
+            depth = 10,
+            durability = rclpy.qos.QoSDurabilityPolicy.VOLATILE,
+            reliability = rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT,
+        )
 
         self.biometrics_path = self.declare_parameter("biometrics", "").value
 
@@ -61,14 +67,9 @@ class RayUWB(Node):
         self.pub_pointing_ray_uwb = self.create_publisher(
             PoseStamped, 
             pointing_ray_topic, 
-            100
+            qos
         )
 
-        qos = rclpy.qos.QoSProfile(
-            depth = 10,
-            durability = rclpy.qos.QoSDurabilityPolicy.VOLATILE,
-            reliability = rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT,
-        )
 
         imu_topic = self.declare_parameter(
             "imu_topic", "imu"
