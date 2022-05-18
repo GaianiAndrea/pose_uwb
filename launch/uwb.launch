@@ -4,9 +4,9 @@
   <arg name="map_path" default="$(find-pkg-share pose_uwb)/map/lab.yaml"/>
   <arg name="do_relloc" default="False"/>
   <arg name="user_kinematics" default="bill"/>
-  <arg name="sim_imu" default="True"/>
+  <arg name="sim_imu" default="False"/>
   <arg name="user_name" default="user1"/>
-  <arg name="pointer_cmap" default="viridis_r"/>
+  <arg name="pointer_cmap" default=""/>
 
   <!-- Params for wrist position node -->
   <arg name="wrist_approx_topic" default="wrist_approx"/>

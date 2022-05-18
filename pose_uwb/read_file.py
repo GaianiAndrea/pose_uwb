@@ -20,6 +20,7 @@ def read_anchor(path):
     anchor2.x = scenario['uwb_bases']["anchor_1"]["position"][0]
     anchor2.y = scenario['uwb_bases']["anchor_1"]["position"][1]
     anchor2.z = scenario['uwb_bases']["anchor_1"]["position"][2]
+    f.close()
 
     return anchor1, anchor2
 

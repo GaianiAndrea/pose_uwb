@@ -3,10 +3,6 @@ from geometry_msgs.msg import Point, Quaternion
 import numpy as np
 import math
 import PyKDL
-import warnings
-
-warnings.filterwarnings('error')
-
 
 def wrist_z_position(imu_coordinate: Quaternion, Bill):
     v = PyKDL.Vector(Bill["shoulder_to_wrist"], 0, 0)
@@ -54,6 +50,11 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
         x1, x2 = np.roots([1, a_1, d_1])
         x1_, x2_ = np.roots([1, a_2, d_2])
 
+        if isinstance(x1, complex):
+            x1 = x1.real + x1.imag
+        if isinstance(x2, complex):
+            x2 = x2.real + x2.imag
+
         # assert math.isclose(x1, x1_) and math.isclose(x2, x2_)
 
         checker = (pos_2.x - pos_1.x) * (p.y - pos_1.y) - (pos_2.y - pos_1.y) * (x1 - pos_1.x)
@@ -75,6 +76,11 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
         y1, y2 = np.roots([1, b_1, d_1])
         y1_, y2_ = np.roots([1, b_2, d_2])
 
+        if isinstance(y1, complex):
+            y1 = y1.real + y1.imag
+        if isinstance(y2, complex):
+            y2 = y2.real + y2.imag
+
         # assert math.isclose(y1, y1_) and math.isclose(y2, y2_)
 
         checker = (pos_2.x - pos_1.x) * (y1 - pos_1.y) - (pos_2.y - pos_1.y) * (p.x - pos_1.x)
@@ -93,6 +99,11 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
         c = A**2 * c_1 + C**2 + a_1 * A * C
 
         y1, y2 = np.roots([a, b, c])
+
+        if isinstance(y1, complex):
+            y1 = y1.real + y1.imag
+        if isinstance(y2, complex):
+            y2 = y2.real + y2.imag
 
         d_1 = y1**2 + b_1 * y1 + c_1
         d_2 = y2**2 + b_1 * y2 + c_1
@@ -118,17 +129,26 @@ def wrist_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, imu
     if dist_1 + dist_2 > np.sqrt(np.sum(np.array([pos_1.x - pos_2.x, pos_1.y - pos_2.y, pos_1.z - pos_2.z]) ** 2,axis=0)):
         # Compute the z-coordinate of the wrist
         z = wrist_z_position(imu_coordinate, Bill)
+        if np.isnan(z):
+            print('z is NaN')
+            return Point(), 'z'
         # Compute the coordintate of the wrist and return the entire point
         p = wrist_xy_position(pos_1, dist_1, pos_2, dist_2, z)
-        return p
+        return p, 'ok'
 
     else:
         print("ERROR, NO INTERSECTION OF THE SPHERES!")
-        return Point()
+        return Point(), 'ni'
 
 
 def compute_x(y: float, z:float, a:float, d:float, pos_1:Point, pos_2:Point, dist_1:float, dist_2:float):
     x1, x2 = np.roots([1, a, d])
+
+    if isinstance(x1, complex):
+        x1 = x1.real + x1.imag
+    if isinstance(x2, complex):
+        x2 = x2.real + x2.imag
+
     checker_x1 = (pos_2.x - pos_1.x) * (y - pos_1.y) - (pos_2.y - pos_1.y) * (x1 - pos_1.x)
     checker_x2 = (pos_2.x - pos_1.x) * (y - pos_1.y) - (pos_2.y - pos_1.y) * (x2 - pos_1.x)
 

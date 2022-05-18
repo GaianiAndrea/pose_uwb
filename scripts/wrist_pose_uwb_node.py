@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import numpy as np
 import rclpy
 import sys
 import yaml
@@ -84,6 +85,11 @@ class IMUSub(Node):
         
         if range_anchor1 >= 0.2 and range_anchor1 <= 15.0 and range_anchor2 >= 0.2 and range_anchor2 <= 15.0:
             self.compute_coord(range_anchor1, range_anchor2)
+        else:
+            self.get_logger().info('ERROR - TOO NEAR OR TOO FAR')
+            self.get_logger().info('Distance anchor 1 = ' + str(range_anchor1))
+            self.get_logger().info('Distance anchor 2 = ' + str(range_anchor2))
+
 
         
     def listener_imu(self, msg):
@@ -91,12 +97,17 @@ class IMUSub(Node):
 
     def compute_coord(self, range_anchor1, range_anchor2):
         
-        self.wrist.point = wrist_position(self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu, self.Bill)
-        if self.wrist.point == Point():
-            print('ERROR - NO INTERSECTION BETWEEN anchorS')
-
-       
-        self.publisher_.publish(self.wrist)
+        self.wrist.point, checker = wrist_position(self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu, self.Bill)
+        if self.wrist.point == Point() and checker == 'ni':
+            self.get_logger().info('ERROR - NO INTERSECTION BETWEEN ANCHORS')
+        elif self.wrist.point == Point() and checker == 'z':
+            self.get_logger().info('ERROR - Z IS NAN')
+        elif np.isnan(self.wrist.point.x) or np.isnan(self.wrist.point.y):
+            self.get_logger().info('ERROR - X OR Y IS NAN')
+            self.get_logger().info('X = ' + str(self.wrist.point.x))
+            self.get_logger().info('Y = ' + str(self.wrist.point.y))
+        else:
+            self.publisher_.publish(self.wrist)
 
 
 if __name__ == '__main__':

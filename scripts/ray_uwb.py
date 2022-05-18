@@ -48,6 +48,7 @@ def pose_from_frame(frame: PyKDL.Frame) -> Pose:
 class RayUWB(Node):
 
     wrist = PyKDL.Vector()
+    rot = PyKDL.Rotation.Quaternion(x=0.0, y=0.0, z=0.0, w=0.0)
     
     def __init__(self):
         super().__init__('pointing_ray_uwb')
@@ -90,18 +91,25 @@ class RayUWB(Node):
             PointStamped,
             wrist_approx_topic,
             self.wrist_pos,
-            100
+            qos
         )
         self.sub
 
     def imu_to_ray(self, data: QuaternionStamped) -> None:
-        rot = PyKDL.Rotation.Quaternion(
+        self.rot = PyKDL.Rotation.Quaternion(
             data.quaternion.x,
             data.quaternion.y,
             data.quaternion.z,
             data.quaternion.w
         )
-        self.pointing_model = PointingBill(self.wrist, rot, self.biometrics_path)
+
+
+    def wrist_pos(self, data):
+        self.wrist[0] = data.point.x
+        self.wrist[1] = data.point.y
+        self.wrist[2] = data.point.z
+
+        self.pointing_model = PointingBill(self.wrist, self.rot, self.biometrics_path)
         
         ray_frame = self.pointing_model.ray()
 
@@ -110,13 +118,6 @@ class RayUWB(Node):
         ray_pose.header.frame_id = 'world'
         ray_pose.pose = pose_from_frame(ray_frame)
         self.pub_pointing_ray_uwb.publish(ray_pose)
-
-
-    def wrist_pos(self, data):
-        
-        self.wrist[0] = data.point.x
-        self.wrist[1] = data.point.y
-        self.wrist[2] = data.point.z
 
         
         

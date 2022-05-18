@@ -1,9 +1,15 @@
 leds:
     anchor_0:
-        position: [-3.42, -4.285, 1]
+        position: [-3.42, -4.285, 1.0]
 
     anchor_1:
-        position: [2.31, -4.285, 1]
+        position: [2.31, -4.285, 1.0]
+
+    anchor_2:
+        position: [-4.1, 3.6, 2.7]
+    
+    anchor_3:
+        position: [4.269, 0.721, 1.654]
 
 strips:
     10:
@@ -13,8 +19,14 @@ strips:
         pixels: 150
 
 uwb_bases:
-    base_0:
+    anchor_0:
         position: [-3.42, -4.285, 1.0]
 
-    base_1:
+    anchor_1:
         position: [2.31, -4.285, 1.0]
+
+    anchor_2:
+        position: [-4.1, 3.6, 2.7]
+    
+    anchor_3:
+        position: [4.269, 0.721, 1.654]
