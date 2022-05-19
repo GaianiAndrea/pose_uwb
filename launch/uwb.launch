@@ -15,18 +15,7 @@
 
   <!-- Params for pointing node -->
   <arg name="pointing_ray_topic" default="pointing_ray_uwb"/>
-
-
-<!--  <include file="$(find-pkg-share relloc)/launch/docker_hri.launch">-->
-<!--    <arg name="map_path" value="$(var map_path)" />-->
-<!--    <arg name="do_relloc" value="$(var do_relloc)"/>-->
-<!--    <arg name="user_kinematics" value="$(var user_kinematics)"/>-->
-<!--    <arg name="sim_imu" value="$(var sim_imu)"/>-->
-<!--    <arg name="user_name" value="$(var user_name)"/>-->
-<!--    <arg name="pointer_cmap" value="$(var pointer_cmap)"/>-->
-<!--    <arg name="ray_topic_name" value="$(var ray_topic_name)"/>-->
-<!--  </include>-->
-
+  
   <include file="$(find-pkg-share relloc)/launch/scenario_1_2_3_4.launch">
     <arg name="map_path" value="$(var map_path)" />
     <arg name="ray_topic_name" value="$(var ray_topic_name)"/>
