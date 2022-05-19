@@ -17,13 +17,18 @@
   <arg name="pointing_ray_topic" default="pointing_ray_uwb"/>
 
 
-  <include file="$(find-pkg-share relloc)/launch/docker_hri.launch">
+<!--  <include file="$(find-pkg-share relloc)/launch/docker_hri.launch">-->
+<!--    <arg name="map_path" value="$(var map_path)" />-->
+<!--    <arg name="do_relloc" value="$(var do_relloc)"/>-->
+<!--    <arg name="user_kinematics" value="$(var user_kinematics)"/>-->
+<!--    <arg name="sim_imu" value="$(var sim_imu)"/>-->
+<!--    <arg name="user_name" value="$(var user_name)"/>-->
+<!--    <arg name="pointer_cmap" value="$(var pointer_cmap)"/>-->
+<!--    <arg name="ray_topic_name" value="$(var ray_topic_name)"/>-->
+<!--  </include>-->
+
+  <include file="$(find-pkg-share relloc)/launch/scenario_1_2_3_4.launch">
     <arg name="map_path" value="$(var map_path)" />
-    <arg name="do_relloc" value="$(var do_relloc)"/>
-    <arg name="user_kinematics" value="$(var user_kinematics)"/>
-    <arg name="sim_imu" value="$(var sim_imu)"/>
-    <arg name="user_name" value="$(var user_name)"/>
-    <arg name="pointer_cmap" value="$(var pointer_cmap)"/>
     <arg name="ray_topic_name" value="$(var ray_topic_name)"/>
   </include>
 
@@ -31,20 +36,25 @@
     <push-ros-namespace namespace="$(var user_name)"/>
     <node name="wrist_position_uwb" pkg="pose_uwb" exec="wrist_pose_uwb_node.py">
       <param name="map_path" value="$(var map_path)" />
-      <param name="wrist_apporx_topic" value="$(var wrist_approx_topic)" />
+      <param name="wrist_approx_topic" value="$(var wrist_approx_topic)" />
       <param name="ranges_topic" value="$(var ranges_topic)" />
       <param name="imu_topic" value="$(var imu_topic)" />
       <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
     </node>
-  </group>
 
-  <group>
-    <push-ros-namespace namespace="$(var user_name)"/>
     <node name="pointing_node_uwb" pkg="pose_uwb" exec="ray_uwb.py">
       <param name="pointing_ray_topic" value="$(var pointing_ray_topic)" />
-      <param name="wrist_apporx_topic" value="$(var wrist_approx_topic)" />
+      <param name="wrist_approx_topic" value="$(var wrist_approx_topic)" />
       <param name="imu_topic" value="$(var imu_topic)" />
       <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
+    </node>
+
+    <node name="supervisor" pkg="relloc" exec="pointing_demo" output="screen" args="--ros-args --log-level info">
+        <param name="map_path" value="$(var map_path)"/>
+        <param name="sim_imu" value="$(var sim_imu)"/>
+        <param name="do_relloc" value="$(var do_relloc)"/>
+        <param name="user_name" value="$(var user_name)"/>
+        <param name="pointer_cmap" value="$(var pointer_cmap)"/>
     </node>
   </group>
 
