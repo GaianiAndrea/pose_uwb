@@ -19,13 +19,6 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
     p = Point()
     p.z = float(z)
 
-    # Compute the radius of the circle at height of z
-    delta_1 = np.abs(p.z - pos_1.z)
-    r_1 = np.sqrt(dist_1**2 - delta_1**2)
-
-    delta_2 = np.abs(p.z - pos_2.z)
-    r_2 = np.sqrt(dist_2**2 - delta_2**2)
-
 
     # Define variable to make easier the computation of x and y
     a_1 = -2 * pos_1.x
@@ -34,8 +27,8 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
     b_1 = -2 * pos_1.y
     b_2 = -2 * pos_2.y
 
-    c_1 = pos_1.x**2 + pos_1.y**2 - r_1**2
-    c_2 = pos_2.x**2 + pos_2.y**2 - r_2**2
+    c_1 = pos_1.x**2 + pos_1.y**2 - dist_1**2
+    c_2 = pos_2.x**2 + pos_2.y**2 - dist_2**2
 
     # If the two ancors have the same x-coordinate then compute first y-coordinate
     # then compute the two possible x-coordinate and by scalar product decided between the two
@@ -45,17 +38,7 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
         d_1 = y**2 + b_1 * y + c_1
         d_2 = y**2 + b_2 * y + c_2
 
-        # assert math.isclose(d_1, d_2)
-
         x1, x2 = np.roots([1, a_1, d_1])
-        x1_, x2_ = np.roots([1, a_2, d_2])
-
-        if isinstance(x1, complex):
-            x1 = x1.real + x1.imag
-        if isinstance(x2, complex):
-            x2 = x2.real + x2.imag
-
-        # assert math.isclose(x1, x1_) and math.isclose(x2, x2_)
 
         checker = (pos_2.x - pos_1.x) * (p.y - pos_1.y) - (pos_2.y - pos_1.y) * (x1 - pos_1.x)
         if checker > 0:
@@ -71,17 +54,7 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
         d_1 = x**2 + a_1 * x + c_1
         d_2 = x**2 + a_2 * x + c_2
 
-        # assert math.isclose(d_1, d_2)
-
         y1, y2 = np.roots([1, b_1, d_1])
-        y1_, y2_ = np.roots([1, b_2, d_2])
-
-        if isinstance(y1, complex):
-            y1 = y1.real + y1.imag
-        if isinstance(y2, complex):
-            y2 = y2.real + y2.imag
-
-        # assert math.isclose(y1, y1_) and math.isclose(y2, y2_)
 
         checker = (pos_2.x - pos_1.x) * (y1 - pos_1.y) - (pos_2.y - pos_1.y) * (p.x - pos_1.x)
         if checker > 0:
@@ -124,21 +97,30 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
 
 
 # Given the postion of the ancor, their distance, the imu quaternion and the user biometry compute the coordinates of the wrist of the user
-def wrist_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, imu_coordinate: Quaternion, Bill):
+def wrist_position(distance: float, pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, imu_coordinate: Quaternion, Bill):
+    
+    # Compute the z-coordinate of the wrist
+    z = wrist_z_position(imu_coordinate, Bill)
+    if np.isnan(z):
+        print('z is NaN')
+        return Point(), 'z'
+
+    # Compute the radius of the circle at height of z
+    delta_1 = np.abs(z - pos_1.z)
+    r_1 = np.sqrt(dist_1**2 - delta_1**2)
+
+    delta_2 = np.abs(z - pos_2.z)
+    r_2 = np.sqrt(dist_2**2 - delta_2**2)
+    
     # Check if the two ancors have an intersection
-    if dist_1 + dist_2 > np.sqrt(np.sum(np.array([pos_1.x - pos_2.x, pos_1.y - pos_2.y, pos_1.z - pos_2.z]) ** 2,axis=0)):
-        # Compute the z-coordinate of the wrist
-        z = wrist_z_position(imu_coordinate, Bill)
-        if np.isnan(z):
-            print('z is NaN')
-            return Point(), 'z'
+    if r_1 + r_2 > distance and distance + r_1 > r_2 and distance + r_2 > r_1:
         # Compute the coordintate of the wrist and return the entire point
-        p = wrist_xy_position(pos_1, dist_1, pos_2, dist_2, z)
+        p = wrist_xy_position(pos_1, r_1, pos_2, r_2, z)
         return p, 'ok'
 
     else:
         print("ERROR, NO INTERSECTION OF THE SPHERES!")
-        return Point(), 'ni'
+        return Point(), 'not_intersection'
 
 
 def compute_x(y: float, z:float, a:float, d:float, pos_1:Point, pos_2:Point, dist_1:float, dist_2:float):

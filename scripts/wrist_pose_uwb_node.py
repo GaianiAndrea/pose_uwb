@@ -34,6 +34,7 @@ class IMUSub(Node):
 
         map_path = self.declare_parameter("map_path", "").value
         self.anchor1, self.anchor2 = read_anchor(map_path)
+        self.distance = np.linalg.norm(np.array([self.anchor1.x - self.anchor2.x, self.anchor1.y - self.anchor2.y]))
 
         # self.get_logger().info('ANCHOR 1' + str(self.anchor1))
         # self.get_logger().info('ANCHOR 2' + str(self.anchor2))
@@ -97,8 +98,8 @@ class IMUSub(Node):
 
     def compute_coord(self, range_anchor1, range_anchor2):
         
-        self.wrist.point, checker = wrist_position(self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu, self.Bill)
-        if self.wrist.point == Point() and checker == 'ni':
+        self.wrist.point, checker = wrist_position(self.distance, self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu, self.Bill)
+        if self.wrist.point == Point() and checker == 'not_intersection':
             self.get_logger().info('ERROR - NO INTERSECTION BETWEEN ANCHORS')
         elif self.wrist.point == Point() and checker == 'z':
             self.get_logger().info('ERROR - Z IS NAN')
