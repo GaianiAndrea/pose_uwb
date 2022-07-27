@@ -6,8 +6,9 @@ import rclpy
 import yaml
 
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped, Pose, PointStamped, PoseWithCovarianceStamped, QuaternionStamped
+from geometry_msgs.msg import PoseStamped, Pose, PointStamped, QuaternionStamped
 from sensor_msgs.msg import Imu
+from nav_msgs.msg import Odometry
 
 
 class PointingBill:
@@ -67,6 +68,51 @@ class RayUWB(Node):
         if self.filter:
             self.imu_msgs = True
 
+            # Subscriber to odom
+            odom_topic = self.declare_parameter(
+                "odom_topic", "/odometry/filtered"
+            ).value
+        
+            self.sub = self.create_subscription(
+                Odometry,
+                odom_topic,
+                self.odom_to_ray,
+                qos
+            )
+            self.sub
+
+        else:
+            imu_topic = self.declare_parameter(
+                "imu_topic", "imu"
+            ).value
+            if self.imu_msgs:
+                self.sub= self.create_subscription(
+                    Imu,
+                    imu_topic,
+                    self.imu_to_ray,
+                    qos
+                )
+            else:
+                self.sub= self.create_subscription(
+                    QuaternionStamped,
+                    imu_topic,
+                    self.imu_to_ray,
+                    qos
+                )
+
+            wrist_approx_topic = self.declare_parameter(
+                "wrist_approx_topic", "wrist_approx"
+            ).value
+        
+            self.sub = self.create_subscription(
+                PointStamped,
+                wrist_approx_topic,
+                self.wrist_pos,
+                qos
+            )
+            self.sub
+
+
         pointing_ray_topic = self.declare_parameter(
             "pointing_ray_topic", "pointing_ray_uwb"
         ).value
@@ -76,46 +122,6 @@ class RayUWB(Node):
             pointing_ray_topic, 
             qos
         )
-
-
-        imu_topic = self.declare_parameter(
-            "imu_topic", "imu"
-        ).value
-        if self.imu_msgs:
-            self.sub= self.create_subscription(
-                Imu,
-                imu_topic,
-                self.imu_to_ray,
-                qos
-            )
-        else:
-            self.sub= self.create_subscription(
-                QuaternionStamped,
-                imu_topic,
-                self.imu_to_ray,
-                qos
-            )
-
-        wrist_approx_topic = self.declare_parameter(
-            "wrist_approx_topic", "wrist_approx"
-        ).value
-        
-        if not self.filter:
-            self.sub = self.create_subscription(
-                PointStamped,
-                wrist_approx_topic,
-                self.wrist_pos,
-                qos
-            )
-            self.sub
-        else:
-            self.sub = self.create_subscription(
-                PoseWithCovarianceStamped,
-                wrist_approx_topic,
-                self.wrist_pos,
-                qos
-            )
-            self.sub
 
     def imu_to_ray(self, data) -> None:
         if self.imu_msgs:
@@ -135,21 +141,37 @@ class RayUWB(Node):
 
 
     def wrist_pos(self, data):
-        if not self.filter:
-            self.wrist[0] = data.point.x
-            self.wrist[1] = data.point.y
-            self.wrist[2] = data.point.z
-        else:
-            self.wrist[0] = data.pose.pose.position.x
-            self.wrist[1] = data.pose.pose.position.y
-            self.wrist[2] = data.pose.pose.position.z
+        self.wrist[0] = data.point.x
+        self.wrist[1] = data.point.y
+        self.wrist[2] = data.point.z
 
+        tmp = data.header.stamp
+        self.ray_publisher(tmp)
+
+    def odom_to_ray(self, data):
+        pose = data.pose.pose
+        
+        self.wrist[0] = pose.position.x
+        self.wrist[1] = pose.position.y
+        self.wrist[2] = pose.position.z
+
+        self.rot = PyKDL.Rotation.Quaternion(
+                pose.orientation.x,
+                pose.orientation.y,
+                pose.orientation.z,
+                pose.orientation.w
+        )
+
+        tmp = data.header.stamp
+        self.ray_publisher(tmp)
+
+    def ray_publisher(self, tmp):
         self.pointing_model = PointingBill(self.wrist, self.rot, self.biometrics_path)
         
         ray_frame = self.pointing_model.ray()
 
         ray_pose = PoseStamped()
-        ray_pose.header.stamp = data.header.stamp
+        ray_pose.header.stamp = tmp
         ray_pose.header.frame_id = 'world'
         ray_pose.pose = pose_from_frame(ray_frame)
         self.pub_pointing_ray_uwb.publish(ray_pose)

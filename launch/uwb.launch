@@ -19,6 +19,7 @@
 
   <!-- Params for pointing node -->
   <arg name="pointing_ray_topic" default="pointing_ray_uwb"/>
+  <arg name="odom_topic" default="/odometry/filtered"/>
   
   <include file="$(find-pkg-share relloc)/launch/scenario_1_2_3_4.launch">
     <arg name="map_path" value="$(var map_path)" />
@@ -44,6 +45,7 @@
       <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
       <param name="filter" value="$(var filter)" />
       <param name="imu_msgs" value="$(var imu_msgs)"/>
+      <param name="odom_topic" value="$(var odom_topic)"/>
     </node>
 
     <node name="imu_with_covariance" pkg="pose_uwb" exec="imu_with_cov.py">
