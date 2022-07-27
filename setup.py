@@ -14,6 +14,7 @@ setup(
         ("share/" + package_name + "/launch", glob("launch/*.launch*")),
         ("share/" + package_name + "/map", glob("map/*.yaml*")),
         ("share/" + package_name + "/scripts", glob("scripts/*.py*")),
+        ("share/" + package_name + "/params_filter", glob("params_filter/*.yaml*")),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -26,5 +27,6 @@ setup(
         'console_scripts': [],
     },
     scripts=["scripts/wrist_pose_uwb_node.py",
-             "scripts/ray_uwb.py"],
+             "scripts/ray_uwb.py",
+             "scripts/imu_with_cov.py"],
 )

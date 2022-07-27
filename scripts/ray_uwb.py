@@ -6,7 +6,8 @@ import rclpy
 import yaml
 
 from rclpy.node import Node
-from geometry_msgs.msg import QuaternionStamped, PoseStamped, Pose, Transform, PointStamped
+from geometry_msgs.msg import PoseStamped, Pose, PointStamped, PoseWithCovarianceStamped, QuaternionStamped
+from sensor_msgs.msg import Imu
 
 
 class PointingBill:
@@ -60,6 +61,11 @@ class RayUWB(Node):
         )
 
         self.biometrics_path = self.declare_parameter("biometrics", "").value
+        self.filter = self.declare_parameter("filter", False).value
+        self.imu_msgs = self.declare_parameter("imu_msgs", False).value
+
+        if self.filter:
+            self.imu_msgs = True
 
         pointing_ray_topic = self.declare_parameter(
             "pointing_ray_topic", "pointing_ray_uwb"
@@ -75,39 +81,68 @@ class RayUWB(Node):
         imu_topic = self.declare_parameter(
             "imu_topic", "imu"
         ).value
-
-        self.sub= self.create_subscription(
-            QuaternionStamped,
-            imu_topic,
-            self.imu_to_ray,
-            qos
-        )
+        if self.imu_msgs:
+            self.sub= self.create_subscription(
+                Imu,
+                imu_topic,
+                self.imu_to_ray,
+                qos
+            )
+        else:
+            self.sub= self.create_subscription(
+                QuaternionStamped,
+                imu_topic,
+                self.imu_to_ray,
+                qos
+            )
 
         wrist_approx_topic = self.declare_parameter(
             "wrist_approx_topic", "wrist_approx"
         ).value
+        
+        if not self.filter:
+            self.sub = self.create_subscription(
+                PointStamped,
+                wrist_approx_topic,
+                self.wrist_pos,
+                qos
+            )
+            self.sub
+        else:
+            self.sub = self.create_subscription(
+                PoseWithCovarianceStamped,
+                wrist_approx_topic,
+                self.wrist_pos,
+                qos
+            )
+            self.sub
 
-        self.sub = self.create_subscription(
-            PointStamped,
-            wrist_approx_topic,
-            self.wrist_pos,
-            qos
-        )
-        self.sub
-
-    def imu_to_ray(self, data: QuaternionStamped) -> None:
-        self.rot = PyKDL.Rotation.Quaternion(
-            data.quaternion.x,
-            data.quaternion.y,
-            data.quaternion.z,
-            data.quaternion.w
-        )
+    def imu_to_ray(self, data) -> None:
+        if self.imu_msgs:
+            self.rot = PyKDL.Rotation.Quaternion(
+                data.orientation.x,
+                data.orientation.y,
+                data.orientation.z,
+                data.orientation.w
+            )
+        else:
+            self.rot = PyKDL.Rotation.Quaternion(
+                data.quaternion.x,
+                data.quaternion.y,
+                data.quaternion.z,
+                data.quaternion.w
+            )
 
 
     def wrist_pos(self, data):
-        self.wrist[0] = data.point.x
-        self.wrist[1] = data.point.y
-        self.wrist[2] = data.point.z
+        if not self.filter:
+            self.wrist[0] = data.point.x
+            self.wrist[1] = data.point.y
+            self.wrist[2] = data.point.z
+        else:
+            self.wrist[0] = data.pose.pose.position.x
+            self.wrist[1] = data.pose.pose.position.y
+            self.wrist[2] = data.pose.pose.position.z
 
         self.pointing_model = PointingBill(self.wrist, self.rot, self.biometrics_path)
         

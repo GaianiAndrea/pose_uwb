@@ -12,6 +12,10 @@
   <arg name="wrist_approx_topic" default="wrist_approx"/>
   <arg name="ranges_topic" default="ranges"/>
   <arg name="imu_topic" default="imu"/>
+  <arg name="new_imu_topic" default="new_imu"/>
+  <arg name="filter" default="False"/>
+  <arg name="imu_msgs" default="False"/>
+
 
   <!-- Params for pointing node -->
   <arg name="pointing_ray_topic" default="pointing_ray_uwb"/>
@@ -29,6 +33,8 @@
       <param name="ranges_topic" value="$(var ranges_topic)" />
       <param name="imu_topic" value="$(var imu_topic)" />
       <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
+      <param name="filter" value="$(var filter)" />
+      <param name="imu_msgs" value="$(var imu_msgs)"/>
     </node>
 
     <node name="pointing_node_uwb" pkg="pose_uwb" exec="ray_uwb.py">
@@ -36,6 +42,15 @@
       <param name="wrist_approx_topic" value="$(var wrist_approx_topic)" />
       <param name="imu_topic" value="$(var imu_topic)" />
       <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
+      <param name="filter" value="$(var filter)" />
+      <param name="imu_msgs" value="$(var imu_msgs)"/>
+    </node>
+
+    <node name="imu_with_covariance" pkg="pose_uwb" exec="imu_with_cov.py">
+      <param name="imu_topic" value="$(var imu_topic)" />
+      <param name="new_imu_topic" value="$(var new_imu_topic)" />
+      <param name="filter" value="$(var filter)" />
+      <param name="imu_msgs" value="$(var imu_msgs)"/>
     </node>
 
     <node name="supervisor" pkg="relloc" exec="pointing_demo" output="screen" args="--ros-args --log-level info">
@@ -46,5 +61,8 @@
         <param name="pointer_cmap" value="$(var pointer_cmap)"/>
     </node>
   </group>
+
+  <let name="use_filter" value="$(eval '$(var filter) == True')"/>
+  <include file="$(find-pkg-share pose_uwb)/launch/filter.launch.py" if="$(var use_filter)"></include>
 
 </launch>
