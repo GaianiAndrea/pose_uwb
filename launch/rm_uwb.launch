@@ -1,0 +1,32 @@
+<launch>
+  <!-- Params for launch file -->
+  <arg name="rm_name" default="rm1"/>
+
+  <!-- Params for robomaster -->
+  <arg name="model" default="s1"/>
+
+  <!-- Params for rm position node -->
+  <arg name="rm_coords_topic" default="pos_approx"/>
+  <arg name="ranges_topic" default="ranges"/>
+  <arg name="map_path" default="$(find-pkg-share pose_uwb)/map/lab.yaml"/>
+  <arg name="filter" default="True"/>
+  <arg name="z_coord" default="0.065"/>
+  <arg name="odom_topic" default="odom"/>
+
+
+  <group>
+    <push-ros-namespace namespace="$(var rm_name)"/>
+    <node name="rm_position_uwb" pkg="pose_uwb" exec="rm_pose_uwb.py">
+      <param name="map_path" value="$(var map_path)" />
+      <param name="rm_coords_topic" value="$(var rm_coords_topic)" />
+      <param name="ranges_topic" value="$(var ranges_topic)" />
+      <param name="z_coord" value="$(var z_coord)" />
+      <param name="odom_topic" value="$(var odom_topic)" />
+    </node>
+  </group>
+
+  <include file="$(find-pkg-share pose_uwb)/launch/rm_filter.launch.py" if="$(var filter)">
+    <arg name="rm" value="$(var rm_name)"/>
+  </include>
+
+</launch>

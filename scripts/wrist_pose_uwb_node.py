@@ -10,7 +10,7 @@ from geometry_msgs.msg import Quaternion, QuaternionStamped, PointStamped, Point
 from sensor_msgs.msg import Imu
 from uwb_msgs.msg import Ranges
 
-from pose_uwb.wrist_position import wrist_position
+from pose_uwb.compute_coords import compute_position
 from pose_uwb.read_file import read_anchor
 
 
@@ -133,9 +133,9 @@ class IMUSub(Node):
     def compute_coord(self, range_anchor1, range_anchor2):
         if not self.filter:
             if self.imu_msgs:
-                self.wrist.point, checker = wrist_position(self.distance, self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu.orientation, self.Bill)
+                self.wrist.point, checker = compute_position(self.distance, self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu.orientation, self.Bill)
             else:
-                self.wrist.point, checker = wrist_position(self.distance, self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu, self.Bill)
+                self.wrist.point, checker = compute_position(self.distance, self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu, self.Bill)
             if self.wrist.point == Point() and checker == 'not_intersection':
                 self.get_logger().info('ERROR - NO INTERSECTION BETWEEN ANCHORS')
             elif self.wrist.point == Point() and checker == 'z':
@@ -147,7 +147,7 @@ class IMUSub(Node):
             else:
                 self.publisher_.publish(self.wrist)
         else:
-            self.wrist.pose.pose.position, checker = wrist_position(self.distance, self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu.orientation, self.Bill)
+            self.wrist.pose.pose.position, checker = compute_position(self.distance, self.anchor1, range_anchor1, self.anchor2, range_anchor2, self.current_imu.orientation, self.Bill)
             self.wrist.pose.covariance = self.cov_position_wrist
             # self.wrist.pose.pose.orientation = self.current_imu.orientation
             if self.wrist.pose.pose.position == Point() and checker == 'not_intersection':

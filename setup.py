@@ -20,7 +20,7 @@ setup(
     zip_safe=True,
     maintainer='Andrea Gaiani',
     maintainer_email='andrea.gaiani@usi.ch',
-    description='Publisher to publish coordinate (x,y) of wrist given by UWB',
+    description='Use UWB to compute location of wrist or robomaster, then if we have the wrist compute ray for pointing',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
@@ -28,5 +28,6 @@ setup(
     },
     scripts=["scripts/wrist_pose_uwb_node.py",
              "scripts/ray_uwb.py",
-             "scripts/imu_with_cov.py"],
+             "scripts/imu_with_cov.py",
+             "scripts/rm_pose_uwb.py"],
 )

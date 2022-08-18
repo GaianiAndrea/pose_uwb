@@ -1,70 +1,34 @@
 <launch>
   <!-- Params for launch file -->
-  <arg name="ray_topic_name" default="pointing_ray_uwb"/>
   <arg name="map_path" default="$(find-pkg-share pose_uwb)/map/lab.yaml"/>
-  <arg name="do_relloc" default="False"/>
-  <arg name="user_kinematics" default="bill"/>
-  <arg name="sim_imu" default="False"/>
-  <arg name="user_name" default="user1"/>
-  <arg name="pointer_cmap" default=""/>
+
 
   <!-- Params for wrist position node -->
-  <arg name="wrist_approx_topic" default="wrist_approx"/>
-  <arg name="ranges_topic" default="ranges"/>
-  <arg name="imu_topic" default="imu"/>
-  <arg name="new_imu_topic" default="new_imu"/>
+  <arg name="user_name" default="user1"/>
   <arg name="filter" default="False"/>
   <arg name="imu_msgs" default="False"/>
+  <arg name="strips" default="False"/>
+
+  <!-- Params for rm position node -->
+  <arg name="rm_ranges_topic" default="ranges"/>
+  <arg name="rm_name" default="rm1"/>
 
 
-  <!-- Params for pointing node -->
-  <arg name="pointing_ray_topic" default="pointing_ray_uwb"/>
-  <arg name="odom_topic" default="/odometry/filtered"/>
-  
-  <include file="$(find-pkg-share relloc)/launch/scenario_1_2_3_4.launch">
+  <include file="$(find-pkg-share pose_uwb)/launch/wrist_uwb.launch">
     <arg name="map_path" value="$(var map_path)" />
-    <arg name="ray_topic_name" value="$(var ray_topic_name)"/>
+    <arg name="user_name" value="$(var user_name)"/>
+    <arg name="filter" value="$(var filter)" />
+    <arg name="imu_msgs" value="$(var imu_msgs)"/>
+    <arg name="strips" value="$(var strips)"/>
   </include>
 
-  <group>
-    <push-ros-namespace namespace="$(var user_name)"/>
-    <node name="wrist_position_uwb" pkg="pose_uwb" exec="wrist_pose_uwb_node.py">
-      <param name="map_path" value="$(var map_path)" />
-      <param name="wrist_approx_topic" value="$(var wrist_approx_topic)" />
-      <param name="ranges_topic" value="$(var ranges_topic)" />
-      <param name="imu_topic" value="$(var imu_topic)" />
-      <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
-      <param name="filter" value="$(var filter)" />
-      <param name="imu_msgs" value="$(var imu_msgs)"/>
-    </node>
+  <include file="$(find-pkg-share pose_uwb)/launch/rm_uwb.launch">
+    <arg name="name" value="$(var rm_name)"/>
+    <arg name="ranges_topic" value="$(var rm_ranges_topic)" />
+    <arg name="map_path" value="$(var map_path)" />
+  </include>
 
-    <node name="pointing_node_uwb" pkg="pose_uwb" exec="ray_uwb.py">
-      <param name="pointing_ray_topic" value="$(var pointing_ray_topic)" />
-      <param name="wrist_approx_topic" value="$(var wrist_approx_topic)" />
-      <param name="imu_topic" value="$(var imu_topic)" />
-      <param name="biometrics" value="$(find-pkg-share volaly_kinematics)/config/$(var user_kinematics)_kinematics.yaml"/>
-      <param name="filter" value="$(var filter)" />
-      <param name="imu_msgs" value="$(var imu_msgs)"/>
-      <param name="odom_topic" value="$(var odom_topic)"/>
-    </node>
 
-    <node name="imu_with_covariance" pkg="pose_uwb" exec="imu_with_cov.py">
-      <param name="imu_topic" value="$(var imu_topic)" />
-      <param name="new_imu_topic" value="$(var new_imu_topic)" />
-      <param name="filter" value="$(var filter)" />
-      <param name="imu_msgs" value="$(var imu_msgs)"/>
-    </node>
-
-    <node name="supervisor" pkg="relloc" exec="pointing_demo" output="screen" args="--ros-args --log-level info">
-        <param name="map_path" value="$(var map_path)"/>
-        <param name="sim_imu" value="$(var sim_imu)"/>
-        <param name="do_relloc" value="$(var do_relloc)"/>
-        <param name="user_name" value="$(var user_name)"/>
-        <param name="pointer_cmap" value="$(var pointer_cmap)"/>
-    </node>
-  </group>
-
-  <let name="use_filter" value="$(eval '$(var filter) == True')"/>
-  <include file="$(find-pkg-share pose_uwb)/launch/filter.launch.py" if="$(var use_filter)"></include>
+  
 
 </launch>

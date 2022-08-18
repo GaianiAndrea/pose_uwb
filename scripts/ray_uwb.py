@@ -2,13 +2,15 @@
 
 import math
 import PyKDL
-import rclpy
+import rclpy.qos
 import yaml
 
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped, Pose, PointStamped, QuaternionStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, PointStamped, QuaternionStamped
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
+from pose_uwb.utils import pose_from_frame
+from std_msgs.msg import Bool
 
 
 class PointingBill:
@@ -38,14 +40,6 @@ class PointingBill:
         rot_axis = PyKDL.Vector(1, 0, 0) * ray_axis
         return PyKDL.Frame(R=PyKDL.Rotation.Rot(rot_axis, rot_angle), V=self.eye_position)
 
-def pose_from_frame(frame: PyKDL.Frame) -> Pose:
-    msg = Pose()
-    o = msg.orientation
-    o.x, o.y, o.z, o.w = frame.M.GetQuaternion()
-    p = msg.position
-    p.x, p.y, p.z = frame.p
-    return msg
-
 
 class RayUWB(Node):
 
@@ -70,7 +64,7 @@ class RayUWB(Node):
 
             # Subscriber to odom
             odom_topic = self.declare_parameter(
-                "odom_topic", "/odometry/filtered"
+                "odom_topic", "filtered"
             ).value
         
             self.sub = self.create_subscription(
@@ -80,6 +74,26 @@ class RayUWB(Node):
                 qos
             )
             self.sub
+
+            self.create_subscription(
+                Bool, 
+                'button', 
+                self.has_received_button, 
+                qos)
+
+            set_pose = self.declare_parameter(
+            "set_pose", "set_pose"
+            ).value
+
+            self.set_pose_topic = self.create_publisher(
+                PoseWithCovarianceStamped, 
+                set_pose, 
+                rclpy.qos.QoSProfile(
+                    depth = 10,
+                    durability = rclpy.qos.QoSDurabilityPolicy.VOLATILE,
+                    reliability = rclpy.qos.QoSReliabilityPolicy.RELIABLE,
+                )
+            )
 
         else:
             imu_topic = self.declare_parameter(
@@ -140,7 +154,7 @@ class RayUWB(Node):
             )
 
 
-    def wrist_pos(self, data):
+    def wrist_pos(self, data: PointStamped):
         self.wrist[0] = data.point.x
         self.wrist[1] = data.point.y
         self.wrist[2] = data.point.z
@@ -148,7 +162,7 @@ class RayUWB(Node):
         tmp = data.header.stamp
         self.ray_publisher(tmp)
 
-    def odom_to_ray(self, data):
+    def odom_to_ray(self, data: Odometry):
         pose = data.pose.pose
         
         self.wrist[0] = pose.position.x
@@ -176,8 +190,18 @@ class RayUWB(Node):
         ray_pose.pose = pose_from_frame(ray_frame)
         self.pub_pointing_ray_uwb.publish(ray_pose)
 
-        
-        
+    def has_received_button(self, msg:Bool):
+        if msg:
+            new_pose = PoseWithCovarianceStamped()
+            new_pose.header.frame_id = 'world'
+            new_pose.pose.pose.position.x = self.wrist.x()
+            new_pose.pose.pose.position.y = self.wrist.y()
+            new_pose.pose.pose.position.z = self.wrist.z()
+
+            orient = self.rot.GetQuaternion()
+            # new_pose.pose.pose.orientation.x = orient[0]
+            # new_pose.pose.pose.orientation.y = orient[1]
+            self.set_pose_topic.publish(new_pose)    
 
 def main(args=None):
     rclpy.init(args=args)

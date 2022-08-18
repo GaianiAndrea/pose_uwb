@@ -4,7 +4,7 @@ import numpy as np
 import math
 import PyKDL
 
-def wrist_z_position(imu_coordinate: Quaternion, Bill):
+def compute_z_coords(imu_coordinate: Quaternion, Bill):
     v = PyKDL.Vector(Bill["shoulder_to_wrist"], 0, 0)
     shoulder = Bill["footprint_to_neck"]
     R = PyKDL.Rotation.Quaternion(
@@ -15,7 +15,7 @@ def wrist_z_position(imu_coordinate: Quaternion, Bill):
     return z
 
 
-def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, z: float):
+def compute_xy_coords(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, z: float):
     p = Point()
     p.z = float(z)
 
@@ -97,10 +97,10 @@ def wrist_xy_position(pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, 
 
 
 # Given the postion of the ancor, their distance, the imu quaternion and the user biometry compute the coordinates of the wrist of the user
-def wrist_position(distance: float, pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, imu_coordinate: Quaternion, Bill):
+def compute_position(distance: float, pos_1: Point, dist_1: float, pos_2: Point, dist_2: float, imu_coordinate: Quaternion, Bill):
     
     # Compute the z-coordinate of the wrist
-    z = wrist_z_position(imu_coordinate, Bill)
+    z = compute_z_coords(imu_coordinate, Bill)
     if np.isnan(z):
         print('z is NaN')
         return Point(), 'z'
@@ -115,7 +115,7 @@ def wrist_position(distance: float, pos_1: Point, dist_1: float, pos_2: Point, d
     # Check if the two ancors have an intersection
     if r_1 + r_2 > distance and distance + r_1 > r_2 and distance + r_2 > r_1:
         # Compute the coordintate of the wrist and return the entire point
-        p = wrist_xy_position(pos_1, r_1, pos_2, r_2, z)
+        p = compute_xy_coords(pos_1, r_1, pos_2, r_2, z)
         return p, 'ok'
 
     else:
