@@ -37,10 +37,16 @@ class RM_Pose(Node):
         ).value
         self.z = z_coord
 
-        qos = rclpy.qos.QoSProfile(
+        qos_rel = rclpy.qos.QoSProfile(
             depth=10,
             durability=rclpy.qos.QoSDurabilityPolicy.VOLATILE,
             reliability=rclpy.qos.QoSReliabilityPolicy.RELIABLE,
+        )
+
+        qos_be = rclpy.qos.QoSProfile(
+            depth=10,
+            durability=rclpy.qos.QoSDurabilityPolicy.VOLATILE,
+            reliability=rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT,
         )
 
         map_path = self.declare_parameter(
@@ -62,7 +68,7 @@ class RM_Pose(Node):
         self.publisher_ = self.create_publisher(
             PoseWithCovarianceStamped, 
             rm_coords_topic, 
-            qos
+            qos_rel
         )
 
         ranges_topic = self.declare_parameter(
@@ -73,7 +79,7 @@ class RM_Pose(Node):
             Ranges, 
             ranges_topic, 
             self.listener_ranges, 
-            qos
+            qos_be
         )
         self.subscription  # prevent unused variable warning
 
@@ -85,7 +91,7 @@ class RM_Pose(Node):
             Odometry, 
             odom_topic, 
             self.listener_odom, 
-            qos
+            qos_rel
         )
         self.subscription  # prevent unused variable warning
 

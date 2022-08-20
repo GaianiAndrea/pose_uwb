@@ -10,7 +10,7 @@ from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, PointStamp
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 from pose_uwb.utils import pose_from_frame
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Empty
 
 
 class PointingBill:
@@ -45,6 +45,7 @@ class RayUWB(Node):
 
     wrist = PyKDL.Vector()
     rot = PyKDL.Rotation.Quaternion(x=0.0, y=0.0, z=0.0, w=0.0)
+    cov = []
     
     def __init__(self):
         super().__init__('pointing_ray_uwb')
@@ -75,10 +76,16 @@ class RayUWB(Node):
             )
             self.sub
 
+            # self.create_subscription(
+            #     Bool, 
+            #     'button', 
+            #     self.has_received_button, 
+            #     qos)
+
             self.create_subscription(
-                Bool, 
-                'button', 
-                self.has_received_button, 
+                Empty, 
+                'reset_yaw', 
+                self.empty_sub, 
                 qos)
 
             set_pose = self.declare_parameter(
@@ -176,6 +183,8 @@ class RayUWB(Node):
                 pose.orientation.w
         )
 
+        self.cov = data.pose.covariance
+
         tmp = data.header.stamp
         self.ray_publisher(tmp)
 
@@ -190,18 +199,50 @@ class RayUWB(Node):
         ray_pose.pose = pose_from_frame(ray_frame)
         self.pub_pointing_ray_uwb.publish(ray_pose)
 
-    def has_received_button(self, msg:Bool):
+    # def has_received_button(self, msg:Bool):
+    #     if msg:
+    #         new_pose = PoseWithCovarianceStamped()
+    #         new_pose.header.frame_id = 'world'
+    #         new_pose.pose.pose.position.x = self.wrist.x()
+    #         new_pose.pose.pose.position.y = self.wrist.y()
+    #         new_pose.pose.pose.position.z = self.wrist.z()
+
+    #         r, p, y  = self.rot.GetRPY()
+    #         y = 0
+    #         new_rot = PyKDL.Rotation.RPY(r,p,y)
+
+    #         orient = new_rot.GetQuaternion()
+    #         new_pose.pose.pose.orientation.x = orient[0]
+    #         new_pose.pose.pose.orientation.y = orient[1]
+    #         new_pose.pose.pose.orientation.z = orient[2]
+    #         new_pose.pose.pose.orientation.w = orient[3]
+    #         self.set_pose_topic.publish(new_pose)   
+
+    def empty_sub(self, msg:Empty):
         if msg:
+            self.get_logger().info("resetting yaws")
             new_pose = PoseWithCovarianceStamped()
             new_pose.header.frame_id = 'world'
             new_pose.pose.pose.position.x = self.wrist.x()
             new_pose.pose.pose.position.y = self.wrist.y()
             new_pose.pose.pose.position.z = self.wrist.z()
 
-            orient = self.rot.GetQuaternion()
-            # new_pose.pose.pose.orientation.x = orient[0]
-            # new_pose.pose.pose.orientation.y = orient[1]
-            self.set_pose_topic.publish(new_pose)    
+            r, p, y  = self.rot.GetRPY()
+            y = 0
+            new_rot = PyKDL.Rotation.RPY(r,p,y)
+
+            orient = new_rot.GetQuaternion()
+            new_pose.pose.pose.orientation.x = orient[0]
+            new_pose.pose.pose.orientation.y = orient[1]
+            new_pose.pose.pose.orientation.z = orient[2]
+            new_pose.pose.pose.orientation.w = orient[3]
+
+            new_pose.pose.covariance = self.cov
+            new_pose.pose.covariance[-1] = 0.01
+
+            self.get_logger().info(str(self.cov[-1]))
+
+            self.set_pose_topic.publish(new_pose) 
 
 def main(args=None):
     rclpy.init(args=args)
