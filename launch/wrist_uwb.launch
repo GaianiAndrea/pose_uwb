@@ -51,11 +51,9 @@
       <param name="set_pose" value="$(var set_pose)"/>
     </node>
 
-    <node name="imu_with_covariance" pkg="pose_uwb" exec="imu_with_cov.py">
+    <node name="imu_with_covariance" pkg="pose_uwb" exec="imu_with_cov.py"  if="$(var imu_msgs)">
       <param name="imu_topic" value="$(var imu_topic)" />
       <param name="new_imu_topic" value="$(var new_imu_topic)" />
-      <param name="filter" value="$(var filter)" />
-      <param name="imu_msgs" value="$(var imu_msgs)"/>
     </node>
 
     <node name="supervisor" pkg="relloc" exec="pointing_demo" output="screen" args="--ros-args --log-level info" if="$(var strips)">

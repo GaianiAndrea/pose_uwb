@@ -232,15 +232,20 @@ class RayUWB(Node):
             new_rot = PyKDL.Rotation.RPY(r,p,y)
 
             orient = new_rot.GetQuaternion()
-            new_pose.pose.pose.orientation.x = orient[0]
-            new_pose.pose.pose.orientation.y = orient[1]
-            new_pose.pose.pose.orientation.z = orient[2]
-            new_pose.pose.pose.orientation.w = orient[3]
+            # new_pose.pose.pose.orientation.x = orient[0]
+            # new_pose.pose.pose.orientation.y = orient[1]
+            # new_pose.pose.pose.orientation.z = orient[2]
+            # new_pose.pose.pose.orientation.w = orient[3]
+
+            new_pose.pose.pose.orientation.x = 0.0
+            new_pose.pose.pose.orientation.y = 0.0
+            new_pose.pose.pose.orientation.z = 0.0
+            new_pose.pose.pose.orientation.w = 1.0
 
             new_pose.pose.covariance = self.cov
-            new_pose.pose.covariance[-1] = 0.01
+            new_pose.pose.covariance[-1] = 1.0
 
-            self.get_logger().info(str(self.cov[-1]))
+            self.get_logger().info(str(orient))
 
             self.set_pose_topic.publish(new_pose) 
 

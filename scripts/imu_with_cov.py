@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import rclpy
+import rclpy.qos
 import sys
 
 from rclpy.node import Node
-from geometry_msgs.msg import Quaternion, QuaternionStamped
 from sensor_msgs.msg import Imu
 
 
@@ -30,12 +30,6 @@ class IMUPub(Node):
             reliability = rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT,
         )
 
-        self.filter = self.declare_parameter("filter", False).value
-        self.imu_msgs = self.declare_parameter("imu_msgs", False).value
-
-        if self.filter:
-            self.imu_msgs = True
-
 
         imu_topic = self.declare_parameter(
             "imu_topic", "imu"
@@ -45,42 +39,31 @@ class IMUPub(Node):
                 "new_imu_topic", 'new_imu'
             ).value
 
-        if self.imu_msgs:
-            self.current_imu = Imu()
+        self.current_imu = Imu()
 
-            self.subscription = self.create_subscription(
-                Imu,
-                imu_topic,
-                self.listener_imu,
-                qos)
+        self.subscription = self.create_subscription(
+            Imu,
+            imu_topic,
+            self.listener_imu,
+            qos)
 
-            self.new_imu = Imu()
-            self.publisher_ = self.create_publisher(
-                Imu, 
-                new_imu_topic,
-                qos)
-        else:
-            self.current_imu = Quaternion()
+        self.new_imu = Imu()
+        self.publisher_ = self.create_publisher(
+            Imu, 
+            new_imu_topic,
+            qos)
 
-            self.subscription = self.create_subscription(
-                QuaternionStamped,
-                imu_topic,
-                self.listener_imu,
-                qos)
         self.subscription  # prevent unused variable warning
 
-    def listener_imu(self, msg):
-        if self.imu_msgs:
-            self.current_imu = msg
+    def listener_imu(self, msg:Imu):
+        self.current_imu = msg
 
-            self.new_imu = self.current_imu
+        self.new_imu = self.current_imu
 
-            self.new_imu.angular_velocity_covariance = self.cov_ang
-            self.new_imu.linear_acceleration_covariance = self.cov_acc
-            self.new_imu.orientation_covariance = self.cov_orientation
-            self.publisher_.publish(self.new_imu)
-        else:
-            self.current_imu = msg.quaternion
+        self.new_imu.angular_velocity_covariance = self.cov_ang
+        self.new_imu.linear_acceleration_covariance = self.cov_acc
+        self.new_imu.orientation_covariance = self.cov_orientation
+        self.publisher_.publish(self.new_imu)
 
 
 if __name__ == '__main__':

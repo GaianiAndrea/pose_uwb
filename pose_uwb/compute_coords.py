@@ -112,7 +112,7 @@ def compute_position(distance: float, pos_1: Point, dist_1: float, pos_2: Point,
     delta_2 = np.abs(z - pos_2.z)
     r_2 = np.sqrt(dist_2**2 - delta_2**2)
     
-    # Check if the two ancors have an intersection
+    # Check if the two anchors have an intersection
     if r_1 + r_2 > distance and distance + r_1 > r_2 and distance + r_2 > r_1:
         # Compute the coordintate of the wrist and return the entire point
         p = compute_xy_coords(pos_1, r_1, pos_2, r_2, z)
