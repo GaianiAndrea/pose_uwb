@@ -29,4 +29,8 @@
     <arg name="rm" value="$(var rm_name)"/>
   </include>
 
+  <include file="$(find-pkg-share manipulation_robomaster_utils)/launch/demo_uwb.launch">
+    <arg name="name" value="$(var rm_name)"/>
+  </include>
+
 </launch>
